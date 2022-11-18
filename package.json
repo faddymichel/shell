@@ -1,6 +1,6 @@
 {
   "name": "@faddymichel/language",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A function that acts as a JavaScripting Language branched from Javascript",
   "type": "module",
   "main": "index.js",

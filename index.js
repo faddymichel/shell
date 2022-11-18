@@ -110,7 +110,7 @@ prompt: location .join ( ' ' )
 
 [ '..' ] ( ... scenario ) {
 
-let { language, location } = this ();
+let { setting: language, location } = this ();
 
 location = location .slice ( 0, -1 );
 
