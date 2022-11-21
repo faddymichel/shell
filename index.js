@@ -1,21 +1,22 @@
 import Scenarist from '@faddymichel/scenarist';
 
-export default function Language ( script ) {
+export default class Language {
+
+constructor ( script ) {
 
 const language = this;
 
-if ( ! ( language instanceof Language ) )
-return new Language ( script );
+return Object .defineProperty ( language, Symbol .for ( 'language/scenarist' ), {
 
-return Object .defineProperty ( language, Symbol .for ( 'language/scenarist' ), { value: Scenarist ( { script, setting: language } ) } ) [ Symbol .for ( 'language/scenarist' ) ];
+value: Scenarist ( { script, setting: language } )
 
-};
+} ) [ Symbol .for ( 'language/scenarist' ) ];
 
-Language .prototype = {
+}
 
-[ Symbol .for ( 'language/delimiter' ) ]: /\s+/,
-[ Symbol .for ( 'language/opening-delimiter' ) ]: '(',
-[ Symbol .for ( 'language/closing-delimiter' ) ]: ')',
+[ Symbol .for ( 'language/delimiter' ) ] = /\s+/;
+[ Symbol .for ( 'language/opening-delimiter' ) ] = '(';
+[ Symbol .for ( 'language/closing-delimiter' ) ] = ')';
 
 [ Symbol .for ( 'language/parse' ) ] ( line ) {
 
@@ -31,7 +32,7 @@ const suffix = line .slice ( end + language [ Symbol .for ( 'language/closing-de
 
 return { start, end, prefix, expansion, suffix };
 
-},
+}
 
 [ Symbol .for ( 'language/enter' ) ] ( line ) {
 
@@ -46,7 +47,7 @@ return scenarist ( Symbol .for ( 'language/enter' ), prefix + scenarist ( Symbol
 
 return scenarist ( ... line .trim () .split ( language [ Symbol .for ( 'language/delimiter' ) ] ) );
 
-},
+}
 
 [ Symbol .for ( 'language/complete' ) ] ( line ) {
 
@@ -66,6 +67,8 @@ return scenarist ( ... scenario, input );
 
 } catch ( error ) {
 
+console .error ( error );
+
 return [];
 
 }
@@ -75,7 +78,7 @@ return [];
 
 }
 
-},
+}
 
 [ Symbol .for ( 'language/completeDirection' ) ] ( input ) {
 
@@ -83,14 +86,20 @@ const { script } = this ();
 
 return [
 
-Object .keys ( Object .getOwnPropertyDescriptors ( script ) )
+[
+
+... (
+Object .keys ( script )
 .filter ( direction => direction .startsWith ( input ) )
-.map ( direction => direction + ' ' ),
+.map ( direction => direction + ' ' )
+), ... ( this ( Symbol .for ( 'language/pattern' ), Symbol .for ( 'language/completeDirection' ), input ) ?.[ 0 ] || [] )
+
+],
 input
 
 ];
 
-},
+}
 
 [ '.' ] ( ... scenario ) {
 
@@ -106,7 +115,7 @@ prompt: location .join ( ' ' )
 
 };
 
-},
+}
 
 [ '..' ] ( ... scenario ) {
 
@@ -124,6 +133,22 @@ language: scenarist,
 prompt: location .join ( ' ' )
 
 };
+
+}
+
+[ Symbol .for ( 'language/pattern' ) ] ( ... scenario ) {
+
+let { script, setting: language } = this ();
+
+script = Object .getPrototypeOf ( script );
+
+if ( ! script )
+return;
+
+const history = language [ Symbol .for ( 'language/history' ) ] = language [ Symbol .for ( 'language/history' ) ] || {};
+const pattern = history [ script ] = history [ script ] || Scenarist ( { script, setting: language } );
+
+return scenario .length ? pattern ( ... scenario ) : pattern;
 
 }
 

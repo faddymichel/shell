@@ -1,10 +1,38 @@
 import Language from './index.js';
-import script from '@faddymichel/scenarist/example/greeter.js';
+import { createInterface } from 'readline';
 
-const $ = Language ( script );
+const $ = new Language ( {
 
-console .log ( $ ( Symbol .for ( 'language/enter' ), 'Math pow ( Math random ) ( Math round ( Math random ) )' ) );
+yallah: 'Salah Abdallah!',
+hello: 'Hello World!',
+'22': 'Abo Traika',
+other: { '13': 'Faddy Michel' }
 
-console .log ( $ ( Symbol .for ( 'language/complete' ), '' ) );
+} );
+const cli = createInterface ( {
 
-console .log ( $ ( Symbol .for ( 'language/enter' ), 'Math .' ) );
+input: process .stdin,
+output: process .stdout,
+completer: line => $ ( Symbol .for ( 'language/complete' ), line .toLowerCase () )
+
+} );
+
+cli .on ( 'line', line => {
+
+try {
+
+console .log (
+$ ( Symbol .for ( 'language/enter' ), line .toLowerCase () )
+);
+
+} catch ( error ) {
+
+console .error ( error .toString () );
+
+}
+
+cli .prompt ();
+
+} );
+
+cli .prompt ();
