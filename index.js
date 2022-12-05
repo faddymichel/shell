@@ -20,7 +20,7 @@ value: Scenarist ( { script, setting: language } )
 
 [ Symbol .for ( 'language/parse' ) ] ( line ) {
 
-const { scenarist, setting: language } = this ();
+const { scenarist, setting: language } = this ( Symbol .for ( 'scenarist/details' ) );
 const delimiter = language [ Symbol .for ( 'language/delimiter' ) ];
 const opening = language [ Symbol .for ( 'language/opening-delimiter' ) ];
 const closing = language [ Symbol .for ( 'language/closing-delimiter' ) ];
@@ -36,7 +36,7 @@ return { start, end, prefix, expansion, suffix };
 
 [ Symbol .for ( 'language/enter' ) ] ( line ) {
 
-const { scenarist, setting: language } = this ();
+const { scenarist, setting: language } = this ( Symbol .for ( 'scenarist/details' ) );
 const { start, end, prefix, expansion, suffix } = scenarist ( Symbol .for ( 'language/parse' ), line );
 
 if ( start > end )
@@ -51,29 +51,22 @@ return scenarist ( ... line .trim () .split ( language [ Symbol .for ( 'language
 
 [ Symbol .for ( 'language/complete' ) ] ( line ) {
 
-const { scenarist, setting: language, script } = this ();
+const { scenarist, setting: language, script } = this ( Symbol .for ( 'scenarist/details' ) );
+
+if ( typeof script === 'function' )
+return [];
+
 const { start, end, expansion } = scenarist ( Symbol .for ( 'language/parse' ), line );
 const scenario = ( start > -1 ? expansion : line ) .trimStart () .split ( language [ Symbol .for ( 'language/delimiter' ) ] );
-const [ input ] = scenario .splice ( -1, 1, Symbol .for ( 'language/completeDirection' ) );
 
-switch ( typeof script [ scenario [ scenario .length - 2 ] ] ) {
-
-case 'object':
-case 'undefined':
+scenario .splice ( -1, 0, Symbol .for ( 'language/completeDirection' ) );
 
 try {
 
-return scenarist ( ... scenario, input );
+return scenarist ( ... scenario );
 
 } catch ( error ) {
 
-console .error ( error );
-
-return [];
-
-}
-
-default:
 return [];
 
 }
@@ -82,7 +75,10 @@ return [];
 
 [ Symbol .for ( 'language/completeDirection' ) ] ( input ) {
 
-const { script } = this ();
+const { scenarist, script } = this ( Symbol .for ( 'scenarist/details' ) );
+
+if ( typeof script === 'function' )
+return [];
 
 return [
 
@@ -92,7 +88,7 @@ return [
 Object .keys ( script )
 .filter ( direction => direction .startsWith ( input ) )
 .map ( direction => direction + ' ' )
-), ... ( this ( Symbol .for ( 'language/pattern' ), Symbol .for ( 'language/completeDirection' ), input ) ?.[ 0 ] || [] )
+), ... ( scenarist ( Symbol .for ( 'language/pattern' ), Symbol .for ( 'language/completeDirection' ), input ) ?.[ 0 ] || [] )
 
 ],
 input
@@ -103,7 +99,7 @@ input
 
 [ '.' ] ( ... scenario ) {
 
-const { scenarist, location } = this ();
+const { scenarist, location } = this ( Symbol .for ( 'scenarist/details' ) );
 
 if ( scenario .length )
 return scenarist ( ... scenario );
@@ -119,7 +115,7 @@ prompt: location .join ( ' ' )
 
 [ '..' ] ( ... scenario ) {
 
-let { setting: language, location } = this ();
+let { setting: language, location } = this ( Symbol .for ( 'scenarist/details' ) );
 
 location = location .slice ( 0, -1 );
 
@@ -138,7 +134,7 @@ prompt: location .join ( ' ' )
 
 [ Symbol .for ( 'language/pattern' ) ] ( ... scenario ) {
 
-let { script, setting: language } = this ();
+let { script, setting: language } = this ( Symbol .for ( 'scenarist/details' ) );
 
 script = Object .getPrototypeOf ( script );
 
