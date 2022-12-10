@@ -1,6 +1,6 @@
 {
   "name": "@faddymichel/language",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A function that acts as a JavaScripting Language branched from Javascript",
   "type": "module",
   "main": "index.js",
@@ -21,6 +21,6 @@
   },
   "homepage": "https://github.com/faddymichel/language#readme",
   "dependencies": {
-    "@faddymichel/scenarist": "^1.2.0"
+    "@faddymichel/scenarist": "^1.2.1"
   }
 }

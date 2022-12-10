@@ -45,17 +45,15 @@ throw Error ( 'Unmatching expansion delimiters' );
 else if ( start > -1 )
 return scenarist ( Symbol .for ( 'language/enter' ), prefix + scenarist ( Symbol .for ( 'language/enter' ), expansion ) + suffix );
 
-return scenarist ( ... line .trim () .split ( language [ Symbol .for ( 'language/delimiter' ) ] ) );
+line = line .trim () .split ( language [ Symbol .for ( 'language/delimiter' ) ] );
+
+return scenarist ( ... line );
 
 }
 
 [ Symbol .for ( 'language/complete' ) ] ( line ) {
 
 const { scenarist, setting: language, script } = this ( Symbol .for ( 'scenarist/details' ) );
-
-if ( typeof script === 'function' )
-return [];
-
 const { start, end, expansion } = scenarist ( Symbol .for ( 'language/parse' ), line );
 const scenario = ( start > -1 ? expansion : line ) .trimStart () .split ( language [ Symbol .for ( 'language/delimiter' ) ] );
 
@@ -67,6 +65,8 @@ return scenarist ( ... scenario );
 
 } catch ( error ) {
 
+console .error ( error );
+
 return [];
 
 }
@@ -75,31 +75,51 @@ return [];
 
 [ Symbol .for ( 'language/completeDirection' ) ] ( input ) {
 
-const { scenarist, script } = this ( Symbol .for ( 'scenarist/details' ) );
-
-if ( typeof script === 'function' )
-return [];
+const { scenarist } = this ( Symbol .for ( 'scenarist/details' ) );
 
 return [
 
-[
-
-... (
-Object .keys ( script )
-.filter ( direction => direction .startsWith ( input ) )
-.map ( direction => direction + ' ' )
-), ... ( scenarist ( Symbol .for ( 'language/pattern' ), Symbol .for ( 'language/completeDirection' ), input ) ?.[ 0 ] || [] )
-
-],
+[ ... scenarist ( Symbol .for ( 'language/completeScriptDirection' ), input ), ... scenarist ( Symbol .for ( 'language/completeSettingDirection' ), input ) ],
 input
 
 ];
 
 }
 
+[ Symbol .for ( 'language/completeScriptDirection' ) ] ( input, ... types ) {
+
+const { scenarist, script } = this ( Symbol .for ( 'scenarist/details' ) );
+
+if ( typeof script === 'function' )
+return [];
+
+return Object .keys ( Object .getOwnPropertyDescriptors ( script ) )
+.filter ( direction => direction .startsWith ( input ) && ( ! types .length || types .include ( typeof script [ direction ] ) ) )
+.map ( direction => direction + ' ' );
+
+}
+
+[ Symbol .for ( 'language/completeSettingDirection' ) ] ( input, secret ) {
+
+const { scenarist, setting } = this ( Symbol .for ( 'scenarist/details' ) );
+let language = secret ?.[ $ .pattern ];
+
+if ( language === undefined ) //|| language ?.constructor === Object )
+language = setting;
+
+if ( ! language || language ?.constructor === Object )
+return [];
+
+return [ ... Object .keys ( Object .getOwnPropertyDescriptors ( language ) )
+.filter ( direction => direction !== 'constructor' && direction .startsWith ( input ) && typeof language [ direction ] === 'function' )
+.map ( direction => direction + ' ' ),
+... scenarist ( Symbol .for ( 'language/completeSettingDirection' ), input, { [ $ .pattern ]: Object .getPrototypeOf ( language ) } ) ];
+
+}
+
 [ '.' ] ( ... scenario ) {
 
-const { scenarist, location } = this ( Symbol .for ( 'scenarist/details' ) );
+const { scenarist, script, location } = this ( Symbol .for ( 'scenarist/details' ) );
 
 if ( scenario .length )
 return scenarist ( ... scenario );
@@ -115,37 +135,15 @@ prompt: location .join ( ' ' )
 
 [ '..' ] ( ... scenario ) {
 
-let { setting: language, location } = this ( Symbol .for ( 'scenarist/details' ) );
-
-location = location .slice ( 0, -1 );
-
+const { location, setting: language } = this ( Symbol .for ( 'scenarist/details' ) );
 const scenarist = language [ Symbol .for ( 'language/scenarist' ) ];
-if ( scenario .length )
+
+scenario = [ ... location .slice ( 0, -1 ), '.', ... scenario ];
+
 return scenarist ( ... scenario );
 
-return {
-
-language: scenarist,
-prompt: location .join ( ' ' )
-
-};
-
-}
-
-[ Symbol .for ( 'language/pattern' ) ] ( ... scenario ) {
-
-let { script, setting: language } = this ( Symbol .for ( 'scenarist/details' ) );
-
-script = Object .getPrototypeOf ( script );
-
-if ( ! script )
-return;
-
-const history = language [ Symbol .for ( 'language/history' ) ] = language [ Symbol .for ( 'language/history' ) ] || {};
-const pattern = history [ script ] = history [ script ] || Scenarist ( { script, setting: language } );
-
-return scenario .length ? pattern ( ... scenario ) : pattern;
-
 }
 
 };
+
+const $ = { pattern: Symbol ( 'language/$pattern' ) };
