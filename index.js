@@ -86,16 +86,28 @@ input
 
 }
 
-[ Symbol .for ( 'language/completeScriptDirection' ) ] ( input, ... types ) {
+[ Symbol .for ( 'language/completeScriptDirection' ) ] ( input, secret ) {
 
-const { scenarist, script } = this ( Symbol .for ( 'scenarist/details' ) );
+const details = this ( Symbol .for ( 'scenarist/details' ) );
 
-if ( typeof script === 'function' )
+let script = secret ?.[ $ .pattern ];
+
+if ( script === undefined )
+( { script } = details );
+
+const { scenarist } = details;
+
+if ( ! script || typeof script === 'function' )
 return [];
 
-return Object .keys ( Object .getOwnPropertyDescriptors ( script ) )
-.filter ( direction => direction .startsWith ( input ) && ( ! types .length || types .include ( typeof script [ direction ] ) ) )
-.map ( direction => direction + ' ' );
+return [
+
+... Object .keys ( Object .getOwnPropertyDescriptors ( script ) )
+.filter ( direction => direction .startsWith ( '$' + input ) )
+.map ( direction => direction .slice ( 1 ) + ' ' ),
+... scenarist ( Symbol .for ( 'language/completeScriptDirection' ), input, { [ $ .pattern ]: Object .getPrototypeOf ( script ) } )
+
+];
 
 }
 

@@ -3,10 +3,10 @@ import { createInterface } from 'readline';
 
 const $ = new Language ( {
 
-yallah: 'Salah Abdallah!',
-hello: 'Hello World!',
-'22': 'Abo Traika',
-other: { '13': 'Faddy Michel' }
+$yallah: 'Salah Abdallah!',
+$hello: 'Hello World!',
+'$22': 'Abo Traika',
+$other: { '$13': 'Faddy Michel' }
 
 } );
 const cli = createInterface ( {
