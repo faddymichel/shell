@@ -1,7 +1,8 @@
-import Language from './index.js';
+import Shell from './index.js';
 import { createInterface } from 'readline';
 
-const $ = new Language ( {
+const shell = new Shell ();
+const interpreter = shell [ Symbol .for ( 'shell/interpreter' ) ] ( {
 
 $yallah: 'Salah Abdallah!',
 $hello: 'Hello World!',
@@ -13,7 +14,7 @@ const cli = createInterface ( {
 
 input: process .stdin,
 output: process .stdout,
-completer: line => $ ( Symbol .for ( 'language/complete' ), line .toLowerCase () )
+completer: line => interpreter ( Symbol .for ( 'shell/complete' ), line .toLowerCase () )
 
 } );
 
@@ -22,7 +23,7 @@ cli .on ( 'line', line => {
 try {
 
 console .log (
-$ ( Symbol .for ( 'language/enter' ), line .toLowerCase () )
+interpreter ( Symbol .for ( 'shell/enter' ), line .toLowerCase () )
 );
 
 } catch ( error ) {

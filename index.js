@@ -1,63 +1,63 @@
 import Scenarist from '@faddymichel/scenarist';
 
-export default class Language {
+export default class Shell {
 
-constructor ( script ) {
+[ Symbol .for ( 'shell/interpreter' ) ] ( script = {} ) {
 
-const language = this;
+if ( typeof this === 'function' )
+return this ( Symbol .for ( 'scenarist/details' ) ) .scenarist;
 
-return Object .defineProperty ( language, Symbol .for ( 'language/scenarist' ), {
+const setting = Object .setPrototypeOf ( { script }, this );
+const interpreter = Scenarist ( { script, setting } );
 
-value: Scenarist ( { script, setting: language } )
-
-} ) [ Symbol .for ( 'language/scenarist' ) ];
+return interpreter;
 
 }
 
-[ Symbol .for ( 'language/delimiter' ) ] = /\s+/;
-[ Symbol .for ( 'language/opening-delimiter' ) ] = '(';
-[ Symbol .for ( 'language/closing-delimiter' ) ] = ')';
+[ Symbol .for ( 'shell/delimiter' ) ] = /\s+/;
+[ Symbol .for ( 'shell/opening-delimiter' ) ] = '(';
+[ Symbol .for ( 'shell/closing-delimiter' ) ] = ')';
 
-[ Symbol .for ( 'language/parse' ) ] ( line ) {
+[ Symbol .for ( 'shell/parse' ) ] ( line ) {
 
-const { scenarist, setting: language } = this ( Symbol .for ( 'scenarist/details' ) );
-const delimiter = language [ Symbol .for ( 'language/delimiter' ) ];
-const opening = language [ Symbol .for ( 'language/opening-delimiter' ) ];
-const closing = language [ Symbol .for ( 'language/closing-delimiter' ) ];
+const { scenarist, setting: shell } = this ( Symbol .for ( 'scenarist/details' ) );
+const delimiter = shell [ Symbol .for ( 'shell/delimiter' ) ];
+const opening = shell [ Symbol .for ( 'shell/opening-delimiter' ) ];
+const closing = shell [ Symbol .for ( 'shell/closing-delimiter' ) ];
 const start = line .lastIndexOf ( opening );
 const end = line .indexOf ( closing, start );
 const prefix = line .slice ( start > 0 ? 0 : -1, start );
-const expansion = line .slice ( start + language [ Symbol .for ( 'language/opening-delimiter' ) ] .length, end > -1 ? end : undefined );
-const suffix = line .slice ( end + language [ Symbol .for ( 'language/closing-delimiter' ) ] .length );
+const expansion = line .slice ( start + shell [ Symbol .for ( 'shell/opening-delimiter' ) ] .length, end > -1 ? end : undefined );
+const suffix = line .slice ( end + shell [ Symbol .for ( 'shell/closing-delimiter' ) ] .length );
 
 return { start, end, prefix, expansion, suffix };
 
 }
 
-[ Symbol .for ( 'language/enter' ) ] ( line ) {
+[ Symbol .for ( 'shell/enter' ) ] ( line ) {
 
-const { scenarist, setting: language } = this ( Symbol .for ( 'scenarist/details' ) );
-const { start, end, prefix, expansion, suffix } = scenarist ( Symbol .for ( 'language/parse' ), line );
+const { scenarist, setting: shell } = this ( Symbol .for ( 'scenarist/details' ) );
+const { start, end, prefix, expansion, suffix } = scenarist ( Symbol .for ( 'shell/parse' ), line );
 
 if ( start > end )
 throw Error ( 'Unmatching expansion delimiters' );
 
 else if ( start > -1 )
-return scenarist ( Symbol .for ( 'language/enter' ), prefix + scenarist ( Symbol .for ( 'language/enter' ), expansion ) + suffix );
+return scenarist ( Symbol .for ( 'shell/enter' ), prefix + scenarist ( Symbol .for ( 'shell/enter' ), expansion ) + suffix );
 
-line = line .trim () .split ( language [ Symbol .for ( 'language/delimiter' ) ] );
+line = line .trim () .split ( shell [ Symbol .for ( 'shell/delimiter' ) ] );
 
 return scenarist ( ... line );
 
 }
 
-[ Symbol .for ( 'language/complete' ) ] ( line ) {
+[ Symbol .for ( 'shell/complete' ) ] ( line ) {
 
-const { scenarist, setting: language, script } = this ( Symbol .for ( 'scenarist/details' ) );
-const { start, end, expansion } = scenarist ( Symbol .for ( 'language/parse' ), line );
-const scenario = ( start > -1 ? expansion : line ) .trimStart () .split ( language [ Symbol .for ( 'language/delimiter' ) ] );
+const { scenarist, setting: shell, script } = this ( Symbol .for ( 'scenarist/details' ) );
+const { start, end, expansion } = scenarist ( Symbol .for ( 'shell/parse' ), line );
+const scenario = ( start > -1 ? expansion : line ) .trimStart () .split ( shell [ Symbol .for ( 'shell/delimiter' ) ] );
 
-scenario .splice ( -1, 0, Symbol .for ( 'language/completeDirection' ) );
+scenario .splice ( -1, 0, Symbol .for ( 'shell/completeDirection' ) );
 
 try {
 
@@ -73,20 +73,20 @@ return [];
 
 }
 
-[ Symbol .for ( 'language/completeDirection' ) ] ( input ) {
+[ Symbol .for ( 'shell/completeDirection' ) ] ( input ) {
 
 const { scenarist } = this ( Symbol .for ( 'scenarist/details' ) );
 
 return [
 
-[ ... scenarist ( Symbol .for ( 'language/completeScriptDirection' ), input ), ... scenarist ( Symbol .for ( 'language/completeSettingDirection' ), input ) ],
+[ ... scenarist ( Symbol .for ( 'shell/completeScriptDirection' ), input ), ... scenarist ( Symbol .for ( 'shell/completeSettingDirection' ), input ) ],
 input
 
 ];
 
 }
 
-[ Symbol .for ( 'language/completeScriptDirection' ) ] ( input, secret ) {
+[ Symbol .for ( 'shell/completeScriptDirection' ) ] ( input, secret ) {
 
 const details = this ( Symbol .for ( 'scenarist/details' ) );
 
@@ -105,27 +105,27 @@ return [
 ... Object .keys ( Object .getOwnPropertyDescriptors ( script ) )
 .filter ( direction => direction .startsWith ( '$' + input ) )
 .map ( direction => direction .slice ( 1 ) + ' ' ),
-... scenarist ( Symbol .for ( 'language/completeScriptDirection' ), input, { [ $ .pattern ]: Object .getPrototypeOf ( script ) } )
+... scenarist ( Symbol .for ( 'shell/completeScriptDirection' ), input, { [ $ .pattern ]: Object .getPrototypeOf ( script ) } )
 
 ];
 
 }
 
-[ Symbol .for ( 'language/completeSettingDirection' ) ] ( input, secret ) {
+[ Symbol .for ( 'shell/completeSettingDirection' ) ] ( input, secret ) {
 
 const { scenarist, setting } = this ( Symbol .for ( 'scenarist/details' ) );
-let language = secret ?.[ $ .pattern ];
+let shell = secret ?.[ $ .pattern ];
 
-if ( language === undefined ) //|| language ?.constructor === Object )
-language = setting;
+if ( shell === undefined ) //|| shell ?.constructor === Object )
+shell = setting;
 
-if ( ! language || language ?.constructor === Object )
+if ( ! shell || shell ?.constructor === Object )
 return [];
 
-return [ ... Object .keys ( Object .getOwnPropertyDescriptors ( language ) )
-.filter ( direction => direction !== 'constructor' && direction .startsWith ( input ) && typeof language [ direction ] === 'function' )
+return [ ... Object .keys ( Object .getOwnPropertyDescriptors ( shell ) )
+.filter ( direction => direction !== 'constructor' && direction .startsWith ( input ) && typeof shell [ direction ] === 'function' )
 .map ( direction => direction + ' ' ),
-... scenarist ( Symbol .for ( 'language/completeSettingDirection' ), input, { [ $ .pattern ]: Object .getPrototypeOf ( language ) } ) ];
+... scenarist ( Symbol .for ( 'shell/completeSettingDirection' ), input, { [ $ .pattern ]: Object .getPrototypeOf ( shell ) } ) ];
 
 }
 
@@ -138,7 +138,7 @@ return scenarist ( ... scenario );
 
 return {
 
-language: scenarist,
+shell: scenarist,
 prompt: location .join ( ' ' )
 
 };
@@ -147,15 +147,32 @@ prompt: location .join ( ' ' )
 
 [ '..' ] ( ... scenario ) {
 
-const { location, setting: language } = this ( Symbol .for ( 'scenarist/details' ) );
-const scenarist = language [ Symbol .for ( 'language/scenarist' ) ];
+let { scenarist, binder } = this ( Symbol .for ( 'scenarist/details' ) );
 
-scenario = [ ... location .slice ( 0, -1 ), '.', ... scenario ];
+scenarist = binder ?.scenarist || scenarist;
 
-return scenarist ( ... scenario );
+if ( scenarist )
+return scenarist ( '.', ... scenario );
+
+}
+
+[ '+' ] ( direction ) {
+
+const { script } = this ( Symbol .for ( 'scenarist/details' ) );
+
+if ( typeof direction === 'string' && direction .length )
+try {
+
+script [ '$' + direction ] = {};
+
+} catch ( error ) {
+
+console .error ( '(Error: Could not create a new direction)' );
+
+}
 
 }
 
 };
 
-const $ = { pattern: Symbol ( 'language/$pattern' ) };
+const $ = { pattern: Symbol ( 'shell/$pattern' ) };
