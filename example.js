@@ -1,20 +1,19 @@
 import Shell from './index.js';
 import { createInterface } from 'readline';
 
-const shell = new Shell ();
-const interpreter = shell [ Symbol .for ( 'shell/interpreter' ) ] ( {
+const play = new Shell ( {
 
 $yallah: 'Salah Abdallah!',
 $hello: 'Hello World!',
 '$22': 'Abo Traika',
 $other: { '$13': 'Faddy Michel' }
 
-} );
+} ) [ Symbol .for ( 'shell/play' ) ];
 const cli = createInterface ( {
 
 input: process .stdin,
 output: process .stdout,
-completer: line => interpreter ( Symbol .for ( 'shell/complete' ), line .toLowerCase () )
+completer: line => play ( Symbol .for ( 'shell/complete' ), line .toLowerCase () )
 
 } );
 
@@ -23,7 +22,7 @@ cli .on ( 'line', line => {
 try {
 
 console .log (
-interpreter ( Symbol .for ( 'shell/enter' ), line .toLowerCase () )
+play ( Symbol .for ( 'shell/enter' ), line .toLowerCase () )
 );
 
 } catch ( error ) {
